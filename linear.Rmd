@@ -1,0 +1,102 @@
+---
+title: "linear model"
+author: "Zihan Xiong"
+date: "2025-12-02"
+output: github_document
+---
+
+```{r, include = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+
+knitr::opts_chunk$set(
+	echo = TRUE,
+	warning = FALSE,
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom"))
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_colour_viridis_d
+scale_fill_discrete = scale_fill_viridis_d
+```
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+```
+
+```{r}
+data(nyc_airbnb)
+nyc_airbnb
+```
+
+```{r}
+nyc_airbnb=
+  nyc_airbnb |>
+  mutate(
+    stars=review_scores_location/2
+  )|>
+  rename(
+    borough=neighbourhood_group
+  )|>
+  filter(borough != "Staten Island") |>
+  select(price, stars, borough, room_type, neighbourhood
+  )
+
+```
+
+do regression!
+```{r}
+fit=lm(price~stars+borough,data=nyc_airbnb)
+fit
+```
+do some additional cleaning then refit
+```{r}
+nyc_airbnb |>
+  count(borough)
+
+nyc_airbnb=
+  nyc_airbnb |>
+  mutate(
+    borough=fct_infreq(borough),
+    room_type=fct_infreq(room_type)
+  )
+fit=lm(price~stars+borough,data = nyc_airbnb)
+fit
+```
+look at `lm` staff
+```{r}
+summary(fit) #得到完整回归,解读模型
+names(summary(fit)) #了解结构
+summary(fit)[["coefficients"]] #系数表,显著性判断,结果整理
+summary(fit)[["df"]] #自由度,统计检验,模型复杂度
+
+fitted.values(fit) #预测值,模型诊断
+resid(fit) #残差,检查假设寻找异常
+```
+
+look at cleaner `lm` stuff
+```{r}
+fit |>
+  broom::tidy() |> #变成干净的数据框格式
+  mutate(
+    term=str_replace(term,"borough","Borough: ")) |>
+      select(term, estimate, p.value) |> #只保留变量名,估计值和p植
+      knitr::kable(digits=3)#变成表格,三位小数点
+
+fit |>
+  broom::glance()
+  #r square的解释力非常弱,需要更多变量, 大于0.75说明比较强
+```
+
+```{r}
+
+```
+
