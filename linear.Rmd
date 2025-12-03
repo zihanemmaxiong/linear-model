@@ -97,6 +97,103 @@ fit |>
 ```
 
 ```{r}
+#残差直方图
+#如果偏斜 ➜ 模型预测偏差较大，可能需要变换（如 log(price)）
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  modelr::add_predictions(fit) |> 
+  filter(resid < 1000) |> 
+  ggplot(aes(x = resid)) + 
+  geom_histogram()
+```
+
+```{r}
+#不同行政区残差分布
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  modelr::add_predictions(fit) |> 
+  filter(resid < 1000) |> 
+  ggplot(aes(x = borough, y = resid)) + 
+  geom_violin()
 
 ```
+```{r}
+#残差vs星级评分
+nyc_airbnb |> 
+  modelr::add_residuals(fit) |> 
+  modelr::add_predictions(fit) |> 
+  filter(resid < 1000) |> 
+  ggplot(aes(x = stars, y = resid)) + 
+  geom_point()
+
+```
+##hypothesis testing
+```{r}
+fit |>
+  broom::tidy()
+```
+alternative model
+```{r}
+fit_alt=lm(price~stars+borough+room_type,data = nyc_airbnb)
+fit_null=lm(price~stars+borough,data=nyc_airbnb)
+```
+
+```{r}
+anova(fit_null, fit_alt) |>
+  broom::tidy()
+```
+## interactions vs nested data
+```{r}
+fit_interactions=
+  lm(price~stars*borough+room_type*borough,data=nyc_airbnb)
+fit_interactions |>
+  broom::tidy()
+```
+look at brooklyn first
+```{r}
+nyc_airbnb |>
+  filter(borough=="Brooklyn") |>
+  lm(price~stars+room_type,data=_) |>
+  broom::tidy()
+
+nyc_airbnb |>
+  filter(borough=="Queens") |>
+  lm(price~stars+room_type,data=_) |>
+  broom::tidy()
+
+nyc_airbnb |>
+  filter(borough=="Manhattan") |>
+  lm(price~stars+room_type,data=_) |>
+  broom::tidy()
+
+nyc_airbnb |>
+  filter(borough=="Bronx") |>
+  lm(price~stars+room_type,data=_) |>
+  broom::tidy()
+```
+write a short function
+```{r}
+lm_airbnb=function(df) {
+  
+  lm(price~stars+room_type, data=df)
+} 
+nyc_airbnb |>
+  filter(borough=="Queens") |>
+  lm_airbnb() |>
+  broom::tidy()
+```
+create a list of dataframes, and iterate to fit the model each time.
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
 
